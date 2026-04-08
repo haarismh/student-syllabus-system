@@ -21,6 +21,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch and display initial data
     fetchSyllabuses();
 
+    const adminLoginBtn = document.getElementById('admin-login-btn');
+    function checkAdminState() {
+        if (sessionStorage.getItem('adminPassword')) {
+            openUploadBtn.classList.remove('hidden');
+            adminLoginBtn.textContent = 'Logout Admin';
+        } else {
+            openUploadBtn.classList.add('hidden');
+            adminLoginBtn.textContent = 'Admin Login';
+        }
+    }
+    checkAdminState();
+
+    adminLoginBtn.addEventListener('click', () => {
+        if (sessionStorage.getItem('adminPassword')) {
+            sessionStorage.removeItem('adminPassword');
+        } else {
+            const pwd = prompt('Enter Admin Password:');
+            if (pwd) sessionStorage.setItem('adminPassword', pwd);
+        }
+        checkAdminState();
+        fetchSyllabuses(yearSelect.value, semesterSelect.value);
+    });
+
     // Event Listeners
     applyFiltersBtn.addEventListener('click', () => {
         const year = yearSelect.value;
@@ -59,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const formData = new FormData(uploadForm);
+        formData.append('adminPassword', sessionStorage.getItem('adminPassword') || '');
         
         // Show loading state
         btnText.classList.add('hidden');
@@ -147,16 +171,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 return map[y] || y + 'th';
             };
 
+            let deleteHTML = '';
+            if (sessionStorage.getItem('adminPassword')) {
+                deleteHTML = `<button class="delete-btn" data-id="${item.id}" style="background:none;border:none;color:red;cursor:pointer;margin-left:10px;font-size:14px;text-decoration:underline;">Delete</button>`;
+            }
+
             card.innerHTML = `
                 <div class="card-badge">${getYearString(item.year)} Year • Sem ${item.semester}</div>
                 <h3 class="card-title">${item.subject_name}</h3>
                 <div class="card-meta">Added: ${new Date(item.created_at).toLocaleDateString()}</div>
                 <div class="card-action">
                     <a href="${item.pdf_path}" target="_blank">View PDF</a>
+                    ${deleteHTML}
                 </div>
             `;
             
             syllabusGrid.appendChild(card);
+            
+            const deleteBtn = card.querySelector('.delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async () => {
+                    if (confirm('Are you sure you want to delete this syllabus?')) {
+                        const pwd = sessionStorage.getItem('adminPassword');
+                        deleteBtn.textContent = '...';
+                        try {
+                            const res = await fetch('/api/syllabus/' + item.id, {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ adminPassword: pwd })
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                                fetchSyllabuses(yearSelect.value, semesterSelect.value);
+                            } else {
+                                alert('Failed to delete: ' + (data.error || 'Unknown error'));
+                                deleteBtn.textContent = 'Delete';
+                            }
+                        } catch(e) {
+                            alert('Network error');
+                            deleteBtn.textContent = 'Delete';
+                        }
+                    }
+                });
+            }
         });
     }
 
