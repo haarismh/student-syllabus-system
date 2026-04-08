@@ -32,12 +32,12 @@ const upload = multer({ storage: storage });
 
 // Database Connection
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'Haarisshaik7', // Update with actual password if needed
-    database: 'student_syllabus'
+    host: 'student-syllabus-db-hawkstar518-e375.k.aivencloud.com',
+    user: 'avnadmin',
+    password: '<redacted>',
+    database: 'defaultdb',
+    port: 26565 // (or whatever port they give you)
 });
-
 db.connect((err) => {
     if (err) {
         console.error('Error connecting to MySQL: ', err);
