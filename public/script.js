@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const spinner = submitBtn.querySelector('.spinner');
 
     // Fetch and display initial data
-    fetchSyllabuses();
+    fetchSyllabuses(yearSelect.value, semesterSelect.value);
 
     const adminLoginBtn = document.getElementById('admin-login-btn');
     function checkAdminState() {
