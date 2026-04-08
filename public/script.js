@@ -18,16 +18,59 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnText = submitBtn.querySelector('span');
     const spinner = submitBtn.querySelector('.spinner');
 
+    const banner = document.getElementById('announcement-banner');
+    const bannerText = document.getElementById('banner-text');
+    const editBannerBtn = document.getElementById('edit-banner-btn');
+
     // Fetch and display initial data
     fetchSyllabuses(yearSelect.value, semesterSelect.value);
+    fetchAnnouncement();
+
+    async function fetchAnnouncement() {
+        try {
+            const res = await fetch('/api/announcement');
+            const data = await res.json();
+            if (data.message) {
+                bannerText.textContent = data.message;
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error("Failed to fetch announcement");
+        }
+    }
+
+    editBannerBtn.addEventListener('click', async () => {
+        const newMessage = prompt('Enter new announcement message:\n(Leave it blank to hide the banner)', bannerText.textContent);
+        if (newMessage !== null) {
+            const pwd = sessionStorage.getItem('adminPassword');
+            try {
+                const res = await fetch('/api/announcement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminPassword: pwd, message: newMessage })
+                });
+                if (res.ok) {
+                    fetchAnnouncement();
+                } else {
+                    alert('Failed to update announcement. Incorrect password?');
+                }
+            } catch (e) {
+                alert('Network error');
+            }
+        }
+    });
 
     const adminLoginBtn = document.getElementById('admin-login-btn');
     function checkAdminState() {
         if (sessionStorage.getItem('adminPassword')) {
             openUploadBtn.classList.remove('hidden');
+            editBannerBtn.classList.remove('hidden');
             adminLoginBtn.textContent = 'Logout Admin';
         } else {
             openUploadBtn.classList.add('hidden');
+            editBannerBtn.classList.add('hidden');
             adminLoginBtn.textContent = 'Admin Login';
         }
     }

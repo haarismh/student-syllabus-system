@@ -24,6 +24,21 @@ async function setup() {
             );
         `);
 
+        console.log('Creating announcements table...');
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS announcements (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                message TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Check if there's already an announcement, if not insert default
+        const [rows] = await connection.query('SELECT id FROM announcements LIMIT 1');
+        if (rows.length === 0) {
+            await connection.query('INSERT INTO announcements (message) VALUES (?)', ['Mid exams are from 13/4/26']);
+        }
+
         console.log('✅ Online Database setup complete! The table has been created.');
         process.exit(0);
     } catch (e) {

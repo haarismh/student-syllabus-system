@@ -123,6 +123,27 @@ app.delete('/api/syllabus/:id', (req, res) => {
     });
 });
 
+// GET announcement
+app.get('/api/announcement', (req, res) => {
+    db.query('SELECT message FROM announcements ORDER BY id DESC LIMIT 1', (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.json({ message: '' });
+        res.json({ message: results[0].message });
+    });
+});
+
+// POST announcement
+app.post('/api/announcement', (req, res) => {
+    const { adminPassword, message } = req.body;
+    if (adminPassword !== ADMIN_PASSWORD) {
+        return res.status(401).json({ error: 'Unauthorized: Incorrect Admin Password' });
+    }
+    db.query('UPDATE announcements SET message = ?', [message], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
