@@ -34,7 +34,7 @@ const upload = multer({ storage: storage });
 const db = mysql.createConnection({
     host: 'student-syllabus-db-hawkstar518-e375.k.aivencloud.com',
     user: 'avnadmin',
-    password: '<redacted>',
+    password: 'AVNS_pHKecHWTI9USt_41Xjp ',
     database: 'defaultdb',
     port: 26565 // (or whatever port they give you)
 });
