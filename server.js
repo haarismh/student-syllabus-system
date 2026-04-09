@@ -73,22 +73,24 @@ app.get('/api/syllabus', (req, res) => {
 // POST route to upload PDF and add DB record
 app.post('/api/syllabus/upload', upload.single('pdf_file'), (req, res) => {
     const { year, semester, subject_name, adminPassword } = req.body;
-    const pdf_path = req.file ? req.file.path : null;
+    const filePath = req.file ? req.file.path : null;
+    const pdf_url = req.file ? `/uploads/${req.file.filename}` : null;
 
     if (adminPassword !== ADMIN_PASSWORD) {
-        if (pdf_path) fs.unlinkSync(pdf_path);
+        if (filePath) fs.unlinkSync(filePath);
         return res.status(401).json({ error: 'Unauthorized: Incorrect Admin Password' });
     }
 
-    if (!year || !semester || !subject_name || !pdf_path) {
+    if (!year || !semester || !subject_name || !pdf_url) {
+        if (filePath) fs.unlinkSync(filePath);
         return res.status(400).json({ error: 'All fields are required.' });
     }
 
     const query = 'INSERT INTO syllabuses (year, semester, subject_name, pdf_path) VALUES (?, ?, ?, ?)';
-    db.query(query, [year, semester, subject_name, `/${pdf_path}`], (err, result) => {
+    db.query(query, [year, semester, subject_name, pdf_url], (err, result) => {
         if (err) {
             // Delete uploaded file if db insertion fails
-            fs.unlinkSync(pdf_path);
+            if (filePath) fs.unlinkSync(filePath);
             return res.status(500).json({ error: err.message });
         }
         res.json({ message: 'Syllabus uploaded successfully!', id: result.insertId });
